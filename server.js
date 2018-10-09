@@ -1,26 +1,47 @@
 const express = require('express');
+const hbs = require('hbs');
+const fs = require('fs');
 
 var app = express();
 
+
+app.use((req, res, next) => {
+    var now = new Date().toString();
+    var logMessage = `${now}: ${req.method} ${req.url}`;
+    console.log(logMessage);
+    fs.appendFile('server.log', logMessage + '\n', (err) => {
+        if (err) {
+            console.log('Unable to append to server.log');
+        }
+    });
+    next();
+});
+
+hbs.registerPartials(__dirname + '/views/partials');
+app.set('view engine', 'hbs');
+/* app.use((req, res, next) => {
+    res.render('maintenance.hbs');
+}); */
+
 app.use(express.static(__dirname + '/public'));
+hbs.registerHelper('getCurrentYear', () => {
+    return new Date().getFullYear();
+});
+hbs.registerHelper('screamIt', (text) => {
+    return text.toUpperCase();
+});
 
 app.get('/', (req, res) => {
-    //res.send('<h1>hello express</h1>');
-    res.send({
-        name: 'Herni',
-        likes: [
-            'marihuana',
-            'lsd',
-            'mescaline',
-            'psilocybin',
-            'ketamine',
-            'gym'
-        ]
+    res.render('home.hbs', {
+        pageTitle:'Home page',
+        welcomeMessage: 'Welcome to my website'
     });
 });
 
 app.get('/about', (req, res) => {
-    res.send('About page');
+    res.render('about.hbs', {
+        pageTitle: 'About page'
+    });
 });
 
 app.get('/bad', (req, res) => {
